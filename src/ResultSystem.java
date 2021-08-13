@@ -36,10 +36,13 @@ public class ResultSystem {
                 .aggregate(constant(0), new Aggregation()).completionSize(2)
                 .choice()
                     .when(header("validated"))
-                    .to("stream:out")
+                    .multicast()
+                        .to("stream:out")
+                        .to("activemq:queue:InventoryQueue")
+                        .to("activemq:queue:BillingQueue")
+                    .end()
                 .endChoice().otherwise()
                     .to("stream:err");
-
             }
         });
 
