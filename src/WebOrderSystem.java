@@ -18,8 +18,12 @@ public class WebOrderSystem {
         private String firstName;
         private String lastName;
         private int Money;
+        private static HashMap<String, Integer> goods_quantity = new HashMap<>();
 
         public boolean canBuy(int Amount) { return Money>=Amount; }
+        public void pay(int Amount) { Money -= Amount; }
+        public void buy(String Product, int Quantity) { goods_quantity.put(Product, Quantity); }
+
 
         public Customer(int CustomerID, String FirstName, String LastName) {
             this.CustomerID= CustomerID;
@@ -49,6 +53,7 @@ public class WebOrderSystem {
         context.addRoutes(new RouteBuilder() {
             @Override
             public void configure() {
+                // Endpoint
                 from("direct:start")
                 .process(new Processor() {
                     @Override
@@ -69,8 +74,9 @@ public class WebOrderSystem {
                     public void process(Exchange exchange) throws Exception {
                         String order= exchange.getIn().getBody(String.class);
                         String[] entries= order.split(", ");
-                        Order orderObject= new Order(Integer.parseInt(entries[4]), entries[0], entries[1], Integer.parseInt(entries[2]), Integer.parseInt(entries[3]));
+                        Order orderObject= new Order(Integer.parseInt(entries[0]), entries[1], entries[2], entries[3], Integer.parseInt(entries[4]));
                         exchange.getIn().setBody(orderObject);
+                        exchange.getIn().setHeader("validated", false);
                     }
                 })
                 .multicast()
@@ -86,7 +92,7 @@ public class WebOrderSystem {
             BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 
             while (true) {
-                int CustomerID; String firstName; String lastName;
+                int CustomerID; String firstName=""; String lastName="";
 
                 System.out.println("Provide your CustomerID or type 'NEW' if you're a new customer");
                 String[] entries = reader.readLine().split(" ");
@@ -110,6 +116,8 @@ public class WebOrderSystem {
                             System.err.println("ERROR: False input. Try again please.\n");
                             continue;
                         }
+                    } else {
+                        continue;
                     }
                 }
 
@@ -122,7 +130,7 @@ public class WebOrderSystem {
                             break;
                         }
                         String order = entries[0] + Integer.parseInt(entries[1]);
-                        placeOrder(order);
+                        placeOrder(CustomerID + firstName + lastName + order);
                         System.out.println("Your order has been issued !\n");
                     } catch (Exception e) {
                         System.err.println("ERROR: Your order can't be processed\n");

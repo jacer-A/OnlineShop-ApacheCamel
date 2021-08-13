@@ -1,22 +1,21 @@
 import java.io.Serializable;
 
 public class Order implements Serializable {
+    private int OrderID;
     private int CustomerID;
     private String FirstName;
     private String LastName;
-    private int OverallItems;
-    private int NumberOfSurfboards;
-    private int NumberOfDivingSuits;
-    private int OrderID;
+    private String Product;
+    private int Quantity;
     private boolean Valid;
     private boolean validationResult;
 
+    public int getOrderID() { return OrderID; }
     public int getCustomerID() { return CustomerID; }
     public String getFirstName() { return FirstName; }
     public String getLastName() { return LastName; }
-    public int getNumberOfSurfboards() {return NumberOfSurfboards; }
-    public int getNumberOfDivingSuits() {return NumberOfDivingSuits; }
-    public int getOrderID() { return OrderID; }
+    public String getProduct() {return Product; }
+    public int getQuantity() {return Quantity; }
     public boolean getValid() {return Valid; }
     public void setValid(boolean b) {Valid= b; }
     public boolean validated() {return validationResult; }
@@ -26,18 +25,17 @@ public class Order implements Serializable {
     public String toString() {
         return "OrderID: " + OrderID + " | " +
                 "Full name: " + FirstName + " " + LastName + ", " +
-                "Number Of Surfboards: " + NumberOfSurfboards + ", " +
-                "Number Of DivingSuits: " + NumberOfDivingSuits;
+                "Product: " + Product + ", " +
+                "Quantity: " + Quantity;
     }
 
 
-    public Order(int CustomerID, String FirstName, String LastName,int NumberOfSurfboards, int NumberOfDivingSuits) {
+    public Order(int CustomerID, String FirstName, String LastName,String Product, int Quantity) {
         this.CustomerID= CustomerID;
         this.FirstName= FirstName;
         this.LastName= LastName;
-        this.OverallItems= NumberOfDivingSuits + NumberOfSurfboards;
-        this.NumberOfSurfboards= NumberOfSurfboards;
-        this.NumberOfDivingSuits= NumberOfDivingSuits;
+        this.Product= Product;
+        this.Quantity= Quantity;
         this.OrderID= (int)(Math.random()*100000);
         this.Valid= true;
         this.validationResult= false;
