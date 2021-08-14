@@ -8,21 +8,15 @@ import org.apache.camel.Processor;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.HashMap;
 
 
 public class WebOrderSystem {
-
-    private static HashMap<Integer, String> Customers= new HashMap<>();
-                      // <CustomerID, fullname>
-
     private static DefaultCamelContext context;
 
     private static void placeOrder(String order) {
-        ProducerTemplate prodTemplate = context.createProducerTemplate();
+        ProducerTemplate prodTemplate= context.createProducerTemplate();
         prodTemplate.sendBody("direct:start", order);
     }
-
 
     public static void main(String[] args) throws Exception {
 
@@ -34,7 +28,6 @@ public class WebOrderSystem {
         context.addRoutes(new RouteBuilder() {
             @Override
             public void configure() {
-                // Endpoint
                 from("direct:start")
                 .process(new Processor() {
                     @Override
@@ -55,9 +48,8 @@ public class WebOrderSystem {
                     public void process(Exchange exchange) throws Exception {
                         String order= exchange.getIn().getBody(String.class);
                         String[] entries= order.split(", ");
-                        Order orderObject= new Order(Integer.parseInt(entries[0]), entries[1], entries[2], entries[3], Integer.parseInt(entries[4]));
+                        Order orderObject= new Order(Integer.parseInt(entries[4]), entries[0], entries[1], Integer.parseInt(entries[2]), Integer.parseInt(entries[3]));
                         exchange.getIn().setBody(orderObject);
-                        exchange.getIn().setHeader("validated", false);
                     }
                 })
                 .multicast()
@@ -73,49 +65,18 @@ public class WebOrderSystem {
             BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 
             while (true) {
-                int CustomerID; String firstName=""; String lastName="";
-
-                System.out.println("Provide your CustomerID or type 'NEW' if you're a new customer");
+                System.out.println("Order format: <FullName NumberOfChairs NumberOfTables>");
+                System.out.println("Place your order:");
                 String[] entries = reader.readLine().split(" ");
+
+                String order = "";
                 try {
-                    CustomerID = Integer.parseInt(entries[0]);
-                    if ( ! Customers.containsKey(CustomerID) ) {
-                        System.err.println("ERROR: CustomerID non existent. Try again please.\n");
-                        continue;
-                    }
-                } catch (Exception e1) {
-                    if (entries[0].equals("NEW") ) {
-                        System.out.println("Type your first name and last name: <firstName lastName>");
-                        entries = reader.readLine().split(" ");
-                        try {
-                            firstName= entries[0];
-                            lastName = entries[1];
-                            CustomerID= (int)(Math.random()*1000);
-                            Customers.put(CustomerID, firstName + " " + lastName );
-                            System.out.println("Your CustomerID is: " + CustomerID);
-                        } catch (Exception e2) {
-                            System.err.println("ERROR: False input. Try again please.\n");
-                            continue;
-                        }
-                    } else {
-                        continue;
-                    }
-                }
-
-                while (true) {
-                    System.out.println("Place your order using the format: <itemName quantity>.\nOr type 'CANCEL' to go back.");
-                    entries = reader.readLine().split(" ");
-
-                    try {
-                        if (entries[0].equals("CANCEL") ) {
-                            break;
-                        }
-                        String order = entries[0] + " " + Integer.parseInt(entries[1]);
-                        placeOrder(CustomerID + " " + firstName + " " + lastName + " " + order);
-                        System.out.println("Your order has been issued !\n");
-                    } catch (Exception e) {
-                        System.err.println("ERROR: Your order can't be processed\n");
-                    }
+                    int CustomerID= (int)(Math.random()*1000);
+                    order += entries[0] + " " + entries[1] + " " + Integer.parseInt(entries[2]) + " " + Integer.parseInt(entries[3]) + " " + CustomerID;
+                    placeOrder(order);
+                    System.out.println("Your order has been issued !\n");
+                } catch (Exception e) {
+                    System.out.println("ERROR: Your order can't be processed\n");
                 }
             }
         } catch (IOException e) {
