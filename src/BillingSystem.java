@@ -7,6 +7,38 @@ import org.apache.camel.Processor;
 import java.util.HashMap;
 
 public class BillingSystem {
+
+    public static class Customer {
+        private int CustomerID;
+        private String firstName;
+        private String lastName;
+        private int Money;
+        private static HashMap<String, Integer> goods_quantity = new HashMap<>();
+
+        public boolean canBuy(int Amount) { return Money>=Amount; }
+        public void pay(int Amount, Order Order) {
+            Money -= Amount;
+            goods_quantity.put(Order.getProduct(), Order.getQuantity());
+        }
+
+        public Customer(int CustomerID, String FirstName, String LastName) {
+            this.CustomerID= CustomerID;
+            this.firstName= FirstName;
+            this.lastName= LastName;
+            this.Money= (int)(Math.random()*1000);
+        }
+
+        @Override
+        public String toString() {
+            return  "CustomerID= " + CustomerID +
+                    ", fullName= " + firstName + " " + lastName +
+                    ", Money= " + Money +
+                    ", goods= " + goods_quantity +
+                    "\n";
+        }
+    }
+    private static HashMap<Integer, Customer> Customers= new HashMap<>();
+
     private static HashMap<String, Integer> goods_price = new HashMap<>();
 
 
@@ -34,17 +66,39 @@ public class BillingSystem {
                 from("activemq:queue:BillingQueue")
                 .choice()
                     .when(header("validated"))
-                    // TODO: invoke pay() in shopCustomers
-                    .to("activemq:queue:shopCustomerQueue") // ??
-                .endChoice().otherwise()
-                    // TODO: invoke canBuy() in shopCustomers
                     .process(new Processor() {
                         @Override
                         public void process(Exchange exchange) throws Exception {
                             Order orderObject= exchange.getIn().getBody(Order.class);
+
+                            int CustomerID= orderObject.getCustomerID();
+                            Customer customer= Customers.get(CustomerID);
+
                             String Product= orderObject.getProduct();
                             int Quantity= orderObject.getQuantity();
-                            orderObject.setValid(true);
+                            customer.pay(goods_price.get(Product)*Quantity, orderObject);
+
+                            exchange.getIn().setBody(Customers);
+                        }
+                    })
+                    .to("stream:out")
+                .endChoice().otherwise()
+                    .process(new Processor() {
+                        @Override
+                        public void process(Exchange exchange) throws Exception {
+                            Order orderObject= exchange.getIn().getBody(Order.class);
+
+                            int CustomerID= orderObject.getCustomerID();
+                            String firstName= orderObject.getFirstName();
+                            String lastName= orderObject.getLastName();
+                            Customer newCustomer= new Customer(CustomerID, firstName, lastName);
+                            if ( ! Customers.containsKey(CustomerID))
+                                Customers.put(CustomerID, newCustomer);
+
+                            String Product= orderObject.getProduct();
+                            int Quantity= orderObject.getQuantity();
+                            orderObject.setValid(newCustomer.canBuy(goods_price.get(Product)*Quantity));
+
                             exchange.getIn().setBody(orderObject);
                         }
                     })

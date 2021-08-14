@@ -13,27 +13,8 @@ import java.util.HashMap;
 
 public class WebOrderSystem {
 
-    public static class Customer {
-        private int CustomerID;
-        private String firstName;
-        private String lastName;
-        private int Money;
-        private static HashMap<String, Integer> goods_quantity = new HashMap<>();
-
-        public boolean canBuy(int Amount) { return Money>=Amount; }
-        public void pay(int Amount) { Money -= Amount; }
-        public void buy(String Product, int Quantity) { goods_quantity.put(Product, Quantity); }
-
-
-        public Customer(int CustomerID, String FirstName, String LastName) {
-            this.CustomerID= CustomerID;
-            this.firstName= FirstName;
-            this.lastName= LastName;
-            this.Money= (int)(Math.random()*1000);
-        }
-    }
-    private static HashMap<Integer, Customer> shopCustomers= new HashMap<>();
-
+    private static HashMap<Integer, String> Customers= new HashMap<>();
+                      // <CustomerID, fullname>
 
     private static DefaultCamelContext context;
 
@@ -98,8 +79,8 @@ public class WebOrderSystem {
                 String[] entries = reader.readLine().split(" ");
                 try {
                     CustomerID = Integer.parseInt(entries[0]);
-                    if ( ! shopCustomers.containsKey(CustomerID) ) {
-                        System.err.println("ERROR: CustomerID not existent. Try again please.\n");
+                    if ( ! Customers.containsKey(CustomerID) ) {
+                        System.err.println("ERROR: CustomerID non existent. Try again please.\n");
                         continue;
                     }
                 } catch (Exception e1) {
@@ -110,7 +91,7 @@ public class WebOrderSystem {
                             firstName= entries[0];
                             lastName = entries[1];
                             CustomerID= (int)(Math.random()*1000);
-                            shopCustomers.put(CustomerID, new Customer(CustomerID, firstName, lastName) );
+                            Customers.put(CustomerID, firstName + " " + lastName );
                             System.out.println("Your CustomerID is: " + CustomerID);
                         } catch (Exception e2) {
                             System.err.println("ERROR: False input. Try again please.\n");
@@ -129,8 +110,8 @@ public class WebOrderSystem {
                         if (entries[0].equals("CANCEL") ) {
                             break;
                         }
-                        String order = entries[0] + Integer.parseInt(entries[1]);
-                        placeOrder(CustomerID + firstName + lastName + order);
+                        String order = entries[0] + " " + Integer.parseInt(entries[1]);
+                        placeOrder(CustomerID + " " + firstName + " " + lastName + " " + order);
                         System.out.println("Your order has been issued !\n");
                     } catch (Exception e) {
                         System.err.println("ERROR: Your order can't be processed\n");
